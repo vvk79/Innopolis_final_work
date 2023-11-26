@@ -1,42 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Сумма слагаемых</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Car Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333333;
+        }
+        form {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        input[type="number"],
+        input[type="text"] {
+            width: 200px;
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #cccccc;
+        }
+        input[type="submit"] {
+            background-color: #333333;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #555555;
+        }
+        h2 {
+            margin-top: 20px;
+            color: #333333;
+        }
+        p {
+            color: #555555;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="mt-5">Введите 8 слагаемых:</h1>
-        <form method="POST" action="/">
-            <div class="form-group">
-                <input type="number" step="any" class="form-control" name="num1" placeholder="Первое слагаемое" required>
-            </div>
-            <div class="form-group">
-                <input type="number" step="any" class="form-control" name="num2" placeholder="Второе слагаемое" required>
-            </div>
-            <div class="form-group">
-                <input type="number" step="any" class="form-control" name="num3" placeholder="Третье слагаемое" required>
-            </div>
-            <div class="form-group">
-                <input type="number" step="any" class="form-control" name="num4" placeholder="Четвертое слагаемое" required>
-            </div>
-            <div class="form-group">
-                <input type="number" step="any" class="form-control" name="num5" placeholder="Пятое слагаемое" required>
-            </div>
-            <div class="form-group">
-                <input type="number" step="any" class="form-control" name="num6" placeholder="Шестое слагаемое" required>
-            </div>
-            <div class="form-group">
-                <input type="number" step="any" class="form-control" name="num7" placeholder="Седьмое слагаемое" required>
-            </div>
-            <div class="form-group">
-                <input type="number" step="any" class="form-control" name="num8" placeholder="Восьмое слагаемое" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Рассчитать</button>
-        </form>
-        {% if result %}
-            <h2 class="mt-3">Сумма: {{ result }}</h2>
-        {% endif %}
-    </div>
+    <h1>Car Calculator</h1>
+    <form method="POST" action="/">
+        <label for="num1">Год выпуска:</label>
+        <input type="number" id="num1" name="num1" required><br><br>
+        <label for="num2">Текущая Стоимость:</label>
+	<input type="text" id="num2" name="num2" required><br><br>
+        <label for="num3">Километраж:</label>
+        <input type="number" id="num3" name="num3" required><br><br>
+        <label for="num4">Количество Владельцев:</label>
+        <input type="number" id="num4" name="num4" required><br><br>
+        <label for="word1">Тип Топлива (Diesel, Petrol):</label>
+        <input type="text" id="word1" name="word1" required><br><br>
+        <label for="word2">Продавец (Dealer, Individual):</label>
+        <input type="text" id="word2" name="word2" required><br><br>
+        <label for="word3">Тип Трансмиссии (Manual, Automatic):</label>
+        <input type="text" id="word3" name="word3" required><br><br>
+        <input type="submit" value="Calculate">
+    </form>
+    {% if result %}
+    <h2>Result:</h2>
+    <p>{{ result }}</p>
+    {% endif %}
 </body>
 </html>

@@ -95,7 +95,7 @@ df.head()
 """Рассмотрим данные на выбросы"""
 
 sns.set_style('darkgrid')
-colors = ['#0055ff', '#ff7000', '#23bf00']
+colors = ['#0055ff', '#f44336', '#23bf00']
 CustomPalette = sns.set_palette(sns.color_palette(colors))
 
 OrderedCols = np.concatenate([df.select_dtypes(exclude='object').columns.values,
@@ -151,21 +151,21 @@ print('{} outliers were identified, whose indices are:\n\n{}'.format(len(outlier
 Выброс создает значимую ассоциацию
 """
 
-# Outliers Labeling
+# Outliers labeling
 df1 = df.copy()
-df1['label'] = 'Normal'
-df1.loc[outliers_indexes,'label'] = 'Outlier'
+df1['label'] = 'Норма'
+df1.loc[outliers_indexes,'label'] = 'Выброс'
 
 # Removing Outliers
 removing_indexes = []
 removing_indexes.extend(df1[df1[target]>33].index)
 removing_indexes.extend(df1[df1['Kms_Driven']>400000].index)
-df1.loc[removing_indexes,'label'] = 'Removing'
+df1.loc[removing_indexes,'label'] = 'Удаленные'
 
 # Plot
 target = 'Selling_Price'
 features = df.columns.drop(target)
-colors = ['#0055ff','#ff7000','#23bf00']
+colors = ['#0055ff','#f44336','#23bf00']
 CustomPalette = sns.set_palette(sns.color_palette(colors))
 fig, ax = plt.subplots(nrows=3 ,ncols=3, figsize=(15,12), dpi=200)
 
@@ -309,8 +309,6 @@ print('y_test shape: ',y_test.shape)
 
 print(X_train)
 print(y_train)
-X_train.to_excel (r'mydata_X.xlsx')
-X_train.to_excel (r'mydata_X.xlsx')
 
 y_test_actual = y_test
 
@@ -344,14 +342,21 @@ def model_evaluation(model, X_test, y_test, model_name):
 
 
     # Y_test vs Y_train scatter plot
-    ax.set_title('y_test vs y_pred_test')
+    ax.set_title('y_true vs y_predicted')
     ax.scatter(x = y_test, y = y_pred)
-    ax.set_xlabel('y_test')
-    ax.set_ylabel('y_pred_test')
+    ax.set_xlabel('y_true')
+    ax.set_ylabel('y_predicted')
+
 
     plt.show()
 
     return pd.DataFrame([MAE, MSE, RMSE, R2_Score], index=['MAE', 'MSE', 'RMSE' ,'R2-Score'], columns=[model_name])
+
+"""Результаты моделирования тренировочной выборки"""
+
+model_evaluation(linear_reg, X_train_scaled, y_train, 'Linear Reg.')
+
+"""Результаты моделирования тестовой выборки"""
 
 model_evaluation(linear_reg, X_test_scaled, y_test, 'Linear Reg.')
 
@@ -383,7 +388,34 @@ pd.DataFrame({'Mean': [MAE_mean,MSE_mean,RMSE_mean,R2_Score_mean], 'Std': [MAE_s
 """Модель линейной регрессии получила R2-score %85,57 при использовании 6-кратной кросс-валидации.
 
 Конвейер - отличный способ предотвратить утечку данных, поскольку он гарантирует, что соответствующий метод будет выполняться на правильном подмножестве данных. Он идеально подходит для использования в кросс-валидации, поскольку гарантирует, что при выполнении подгонки используются только обучающие складки, а тестовое (валидационное) множество используется только для вычисления оценки точности на каждой итерации кросс-валидации
+
+# Шаг 10. Регрессия Лассо
 """
+
+lasso_cv_model = LassoCV(eps=0.01, n_alphas=100, max_iter=10000, cv=3)
+
+lasso_cv_model.fit(X_train_scaled, y_train)
+
+lasso_cv_model.alpha_
+
+model_evaluation(lasso_cv_model, X_train_scaled, y_train, 'Lasso Reg. Train')
+
+model_evaluation(lasso_cv_model, X_test_scaled, y_test, 'Lasso Reg. Test')
+
+"""# Шаг 11. Построение модели Регресии Ридж"""
+
+alphas = 10**np.linspace(10,-2,100)*0.5
+
+ridge_cv_model = RidgeCV(alphas = alphas, cv = 3, scoring = 'neg_mean_squared_error')
+ridge_cv_model.fit(X_train_scaled, y_train)
+
+ridge_cv_model.alpha_
+
+model_evaluation(ridge_cv_model, X_train_scaled, y_train, 'Ridge Reg. Test')
+
+model_evaluation(ridge_cv_model, X_test_scaled, y_test, 'Ridge Reg. Test')
+
+"""# Шаг 12. Построение модели Случайного Леса"""
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV
@@ -411,6 +443,8 @@ param_grid = {"n_estimators":n_estimators,
 rf_rs = RandomizedSearchCV(estimator = rf, param_distributions = param_grid)
 
 rf_rs.fit(X_train_scaled, y_train)
+
+model_evaluation(rf_rs, X_train_scaled, y_train, 'Random Forest')
 
 model_evaluation(rf_rs, X_test_scaled, y_test, 'Random Forest')
 
@@ -444,7 +478,9 @@ gb_rs = RandomizedSearchCV(estimator = gb, param_distributions = param_grid)
 
 gb_rs.fit(X_train_scaled, y_train)
 
-model_evaluation(gb_rs, X_test_scaled, y_test, 'Random Forest')
+model_evaluation(gb_rs, X_train_scaled, y_train, 'Gradient Boosting')
+
+model_evaluation(gb_rs, X_test_scaled, y_test, 'Gradient Boosting')
 
 import csv
 print(X_train_scaled)
@@ -457,37 +493,49 @@ y_test_pred = linear_reg.predict(X_test_scaled)
 df_comp = pd.DataFrame({'Actual':y_test_actual, 'Predicted':y_test_pred})
 y_test_pred_2 = rf_rs.predict(X_test_scaled)
 y_test_pred_3 = gb_rs.predict(X_test_scaled)
+y_test_pred_4 = ridge_cv_model.predict(X_test_scaled)
 df_comp_2 = pd.DataFrame({'Actual':y_test_actual, 'Predicted':y_test_pred_2})
 df_comp_3 = pd.DataFrame({'Actual':y_test_actual, 'Predicted':y_test_pred_3})
+df_comp_4 = pd.DataFrame({'Actual':y_test_actual, 'Predicted':y_test_pred_4})
 
-def compare_plot(df_comp):
+def compare_plot(df_comp, name):
     df_comp.reset_index(inplace=True)
     df_comp.plot(y=['Actual','Predicted'], kind='bar', figsize=(20,7), width=0.8)
-    plt.title('Predicted vs. Actual Target Values for Test Data', fontsize=20)
+    plt.title('Predicted vs. Actual Target Values for Test Data with '+ name, fontsize=20)
     plt.ylabel('Selling_Price', fontsize=15)
     plt.show()
 
-compare_plot(df_comp)
+compare_plot(df_comp, "Linear Regression")
 
-compare_plot(df_comp_2)
+compare_plot(df_comp_2, "Random Forest")
 
-compare_plot(df_comp_3)
+compare_plot(df_comp_3, "Gradient Boosting")
 
-df_exp = pd.read_excel('Experiment.xlsx', index_col=0)
-df_exp
-
-X_X_X = df_exp
-print(X_X_X)
-
-scaler = StandardScaler()
-scaler.fit(X_X_X)
-X_X_X_scaled = scaler.transform(X_X_X)
-X_X_X_scaled
-
-gb_rs.predict([[-7.698591886140423446e-01 , 8.804478250904161918e-01 , -8.275464082857444392e-01 , -1.628575860076396931e-01 , -4.940117600296768385e-01 , 5.089559357923956195e-01 , -7.249465119962125170e-01 , 3.769303685460225761e-01]])
+compare_plot(df_comp_4, "Ridge Regression")
 
 def linear_regression_prediction(Age , Present_Price , Kms_Driven , Owner , Fuel_Type_Diesel ,Fuel_Type_Petrol , Seller_Type_Individual , Transmission_Manual):
-  a = gb_rs.predict([[Age , Present_Price , Kms_Driven , Owner , Fuel_Type_Diesel ,Fuel_Type_Petrol , Seller_Type_Individual , Transmission_Manual]])
+  scaler_2 = scaler(Age , Present_Price , Kms_Driven , Owner , Fuel_Type_Diesel ,Fuel_Type_Petrol , Seller_Type_Individual , Transmission_Manual)
+  a = gb_rs.predict(scaler_2)
   return a[0]
 
-linear_regression_prediction(-7.698591886140423446e-01 , 8.804478250904161918e-01 , -8.275464082857444392e-01 , -1.628575860076396931e-01 , -4.940117600296768385e-01 , 5.089559357923956195e-01 , -7.249465119962125170e-01 , 3.769303685460225761e-01)
+def Gradient_boosting_prediction(Age , Present_Price , Kms_Driven , Owner , Fuel_Type, Seller_Type_Individual , Transmission_Manual):
+  Age_dict = {'2003':'16', '2004':'15','2005':'14','2006':'13','2007':'12','2008':'11','2009':'10', '2010':'9', '2011':'8', '2012':'7', '2013':'6', '2014':'5', '2015':'4', '2016':'3', '2017':'2', '2018':'1'}
+  if Fuel_Type == 'Diesel':
+    Fuel_dict = {'Diesel': '1', 'Petrol': '0'}
+  else:
+    Fuel_dict = {'Diesel': '0', 'Petrol': '1'}
+  Seller_dict = {'Dealer': '0', 'Individual': '1'}
+  Transmission_dict = {'Automatic': '0', 'Manual': '1'}
+  scaler_2 = scaler(Age_dict[str(Age)] , Present_Price , Kms_Driven , Owner , Fuel_dict['Diesel'] ,Fuel_dict['Petrol'] , Seller_dict[str(Seller_Type_Individual)] , Transmission_dict[str(Transmission_Manual)])
+  a = gb_rs.predict(scaler_2)
+  return a[0]
+
+def scaler(Age , Present_Price , Kms_Driven , Owner , Fuel_Type_Diesel ,Fuel_Type_Petrol , Seller_Type_Individual , Transmission_Manual):
+  data_2 = {'Age': [Age], 'Present_Price': [Present_Price], 'Kms_Driven': [Kms_Driven], 'Owner': [Owner], 'Fuel_Type_Diesel': [Fuel_Type_Diesel], 'Fuel_Type_Petrol': [Fuel_Type_Petrol], 'Seller_Type_Individual': [Seller_Type_Individual], 'Transmission_Manual': [Transmission_Manual]}
+  aaa = pd.DataFrame(data_2)
+  scaler = StandardScaler()
+  scaler.fit(X_train)
+  a = scaler.transform(aaa)
+  return a
+
+Gradient_boosting_prediction(2005, 13.6 , 10980 , 0 , 'Diesel' , 'Dealer' , 'Automatic')

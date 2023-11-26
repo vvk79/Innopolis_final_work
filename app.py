@@ -1,24 +1,26 @@
 from flask import Flask, render_template, request
+from final_work import *
 
 app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
-def calculate_sum():
+def home():
     if request.method == 'POST':
-        num1 = float(request.form['num1'])
+        num1 = int(request.form['num1'])
         num2 = float(request.form['num2'])
-        num3 = float(request.form['num3'])
-        num4 = float(request.form['num4'])
-        num5 = float(request.form['num5'])
-        num6 = float(request.form['num6'])
-        num7 = float(request.form['num7'])
-        num8 = float(request.form['num8'])
-        result = num1 + num2 + num3 + num4 + num5 + num6 + num7 + num8
+        num3 = int(request.form['num3'])
+        num4 = int(request.form['num4'])
+        word1 = request.form['word1']
+        word2 = request.form['word2']
+        word3 = request.form['word3']
+        result = Gradient_boosting_prediction(num1, num2, num3, num4, word1, word2, word3)
         return render_template('index.html', result=result)
     return render_template('index.html')
 
-if __name__ == '__main__':
-    app.run(debug=True)
+def calculate_result(num1, num2, num3, num4, word1, word2, word3):
+    total_sum = num1 + num2 + num3 + num4
+    sentence = f"{word1} {total_sum} {word2} {word3}"
+    return sentence
 
-#from final_work import linear_regression_prediction
-#result = linear_regression_prediction(num1, num2, num3, num4, num5, num6, num7, num8)
+if __name__ == '__main__':
+    app.run()
