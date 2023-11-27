@@ -1,4 +1,9 @@
 # Установка:
+Установите python3.11.
+Клонируйте репозиторий на свой локальный компьютер:
+git clone https://github.com/vvk79/Innopolis_final_work/blob/main
+Перейдите в директорию проекта:
+cd Innopolis_final_work
 
 Команда, выполняющаяся в корне репозитория: pip install -r requirements.txt
 
